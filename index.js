@@ -4,14 +4,15 @@ const cors = require('cors')
 const mongoose = require('mongoose')
 
 const config = require('./config')
-const authRouter = require('./auth/authRouter')
+const chatsRouter = require('./express/chats/router')
+const onStartup = require('./utils/onStartup')
 
 const app = express()
 const server = https.createServer({key: config.key, cert: config.cert }, app);
 
 app.use(cors())
 app.use(express.json())
-app.use('/auth', authRouter)
+app.use('/chats', chatsRouter)
 
 const start = async () => {
     try {
@@ -21,6 +22,8 @@ const start = async () => {
             () => {
             console.log(`server started on ${config.port}`)
         })
+
+        await onStartup()
     }
     catch(e) {
         console.log(`server not started, error: ${e}`)

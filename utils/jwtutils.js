@@ -9,7 +9,10 @@ const getPublicKey = async () => {
 
     let response = await fetch(
         config.auth_api_https + '/auth/public-key',
-        { method: 'GET' }
+        {
+            method: 'GET',
+            // mode:'cors'
+        }
     )
 
     if(response.ok) {
@@ -21,11 +24,11 @@ const getPublicKey = async () => {
     }
 }
 
-const verifyToken = (token) => {
+const verifyToken = async (token) => {
     try {
         return jwt.verify(
             token,
-            getPublicKey(),
+            await getPublicKey(),
             {
                 algorithm: 'RS256'
             }
@@ -41,5 +44,6 @@ const verifyToken = (token) => {
 }
 
 module.exports = {
+    getPublicKey,
     verifyToken
 }

@@ -1,6 +1,6 @@
 const jwtutils = require('../../utils/jwtutils')
 
-module.exports = function (request, response, next) {
+module.exports = async function (request, response, next) {
     // TODO: хз чо это, видел в уроке, мб убрать
     if(request.method === 'OPTIONS') {
         next()
@@ -16,7 +16,7 @@ module.exports = function (request, response, next) {
             throw 'Необходимо предоставить JWT в формате "Bearer {JWT}"'
 
         // если jwt токен будет невалидный, то бросит исключение
-        request.user = jwtutils.verifyToken(jwtstring)
+        request.user = await jwtutils.verifyToken(jwtstring)
 
         next()
     } catch (e) {

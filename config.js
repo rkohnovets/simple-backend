@@ -3,6 +3,13 @@ const fs = require('fs')
 const development = true
 const port = process.env.PORT || 4000
 
+if(development)
+    // хз возникала ошибка self-singed certificate (при запросах к серверу аутентификации),
+    // по видимому потому что сервер аутентификации на том же компе,
+    // и сертификат на сервере аутентификации сгенерирован тоже локально
+    // а эта команда убирает такие проверки
+    process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
+
 // to use https on localhost you can generate your own certificate:
 // 1) install openssl
 // 2) delete directory 'cert'
