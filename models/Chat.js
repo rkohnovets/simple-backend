@@ -38,14 +38,14 @@ const ChatSettingSchema = new Schema({
 
 const ChatSchema = new Schema({
     // _id mongodb сгенерирует автоматически
-    name: { type: String },
-    about: { type: String },
-    type: { type: Schema.Types.ObjectId, ref: ChatType, required: true },
+    name:   { type: String },
+    about:  { type: String },
+    type:   { type: Schema.Types.ObjectId, ref: ChatType, required: true },
     //users: [{ type: Schema.Types.ObjectId, ref: ChatUser, required: true, unique: true }],
-    users: [ChatUserSchema],
+    users:  [ ChatUserSchema ],
     //settings: [{ type: Schema.Types.ObjectId, ref: ChatSetting, unique: true }],
-    settings: [ChatSettingSchema],
-    image: { type: Schema.Types.ObjectId }
+    settings: [ ChatSettingSchema ],
+    image:  { type: Schema.Types.ObjectId }
 })
 const Chat = model('Chat', ChatSchema)
 
@@ -184,6 +184,8 @@ module.exports = {
     createNotesChat,
     createTwoPersonsChat,
     createMultiChat,
+    getChatType,
+    getChatRole,
     ChatType,
     ChatRole,
     Chat

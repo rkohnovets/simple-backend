@@ -9,10 +9,7 @@ const getPublicKey = async () => {
 
     let response = await fetch(
         config.auth_api_https + '/auth/public-key',
-        {
-            method: 'GET',
-            // mode:'cors'
-        }
+        { method: 'GET' }
     )
 
     if(response.ok) {
@@ -25,20 +22,14 @@ const getPublicKey = async () => {
 }
 
 const verifyToken = async (token) => {
+    const publicKey = await getPublicKey()
     try {
         return jwt.verify(
             token,
-            await getPublicKey(),
-            {
-                algorithm: 'RS256'
-            }
+            publicKey,
+            { algorithm: 'RS256' }
         );
     } catch (err) {
-        /*
-            TODO throw http 500 here
-            ! Dont send JWT error messages to the client
-            ! Let exception handler handles this error
-        */
         throw err
     }
 }

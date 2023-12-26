@@ -2,16 +2,12 @@ const Router = require('express')
 
 const controller = require('./controller')
 const authMiddleware = require('../shared/authMiddleware')
-const checkRoleMiddleware = require('./checkRoleMiddleware')
+const roleMiddlewareFactory = require('../shared/roleMiddlewareFactory')
 
 const router = Router()
 
-router.get('/publickey', controller.publickey)
-router.post('/register', controller.register)
-router.post('/login', controller.login)
-router.get('/userinfo', authMiddleware, controller.userinfo)
-router.get('/refreshjwt', authMiddleware, controller.refreshjwt)
-// типа только для админов
-router.get('/testCheckRole', [authMiddleware, checkRoleMiddleware(['ADMIN'])], controller.userinfo)
+router.get('/:chatId', authMiddleware, controller.getMessages)
+router.post('/:chatId', authMiddleware, controller.createMessage)
+//router.delete('/:messageId', authMiddleware, controller.publickey)
 
 module.exports = router

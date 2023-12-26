@@ -69,7 +69,7 @@ const getOrCreateUserChats = async (userId) => {
 
     await userChats.save()
 
-    return userChats;
+    return userChats
 }
 
 const UserChats = model('UserChats', UserChatsSchema)

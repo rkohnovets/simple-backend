@@ -1,4 +1,4 @@
-const { Schema, model } = require('mongoose')
+const { Schema, model, Types } = require('mongoose')
 
 const { Chat } = require('./Chat')
 
@@ -26,14 +26,14 @@ const onStartup = async () => {
         let messageType = await MessageType.findOne({name: typeName})
         if (!messageType) {
             messageType = new MessageType({name: typeName})
-            await messageType1.save()
+            await messageType.save()
         }
     }
 }
 
 const createTextMessage = async (userId, chatId, text) => {
     if(text.length > 1000)
-        throw 'USERMESSAGE В вообщении должно быть до 1000 символов'
+        throw 'USERMESSAGE В вообщении должно быть не более 1000 символов'
 
     const chat = await Chat.findById(chatId)
     if(!chat)
@@ -41,13 +41,15 @@ const createTextMessage = async (userId, chatId, text) => {
 
     let userInUsersList = false
     for(const chatUser of chat.users) {
-        if(chatUser.user === userId && !chatUser.leftOn) {
+        if(chatUser.user.toString() === userId && !chatUser.leftOn) {
             userInUsersList = true
             break
         }
     }
     if(!userInUsersList)
         throw 'USERMESSAGE Вы не состоите в этом чате'
+    
+    // TODO: проверка - имеет ли пользователь право создавать сообщения
 
     let messageType = await MessageType.findOne({name: 'TEXT'})
 
@@ -61,80 +63,59 @@ const createTextMessage = async (userId, chatId, text) => {
     })
 
     await message.save()
+
+    return message
 }
 
 const getMessages = async (userId, chatId, pageSize = 20, pageNumber = 1) => {
-    // 1
-    /*
-    MyModel.find({})
-        .sort({ createdAt: -1 })
-        .skip(pageSize * (pageNumber - 1))
-        .limit(pageSize)
-        .exec((err, items) => {
-            if (err) {
-                // handle error
-            }
-            MyModel.countDocuments().exec((countError, count) => {
-                if (countError) {
-                    // handle error
-                }
-                const totalPages = Math.ceil(count / pageSize);
-                res.json({
-                    items,
-                    totalPages,
-                    currentPage: pageNumber,
-                });
-            });
-        });
-    */
+    // TODO: проверка - состоит ли пользователь в чате
 
-    // 2
-    /*
-    MyModel.aggregate([
-        { $sort: { createdAt: -1 } },
-        { $skip: pageSize * (pageNumber - 1) },
-        { $limit: pageSize },
-        { $group: { _id: null, count: { $sum: 1 }, items: { $push: "$$ROOT" } } },
-    ]).exec((err, results) => {
-        if (err) {
-            // handle error
-        }
-        const { count, items } = results[0];
-        const totalPages = Math.ceil(count / pageSize);
-        res.json({
-            items,
-            totalPages,
-            currentPage: pageNumber,
-        });
-    });
-    */
-
-    // второй варик вроде как лучше
     const results = await Message.aggregate([
-        { $match: { chat: chatId } },
+        { $match: { chat: new Types.ObjectId(chatId) } },
         { $sort: { date: -1 } },
         { $skip: pageSize * (pageNumber - 1) },
         { $limit: pageSize },
         { $group: { _id: null, count: { $sum: 1 }, items: { $push: "$$ROOT" } } },
-    ]).exec((err, results) => {
-        if (err) {
-            throw `Ошибка при получении сообщений ${err}`
-        }
-        const { count, items } = results[0]
-        const totalPages = Math.ceil(count / pageSize)
+    ]).exec()
+
+    let { count, items } = results[0] ?? { count: 1, items: [] }
+
+    const messageTypes = await MessageType.find({}).exec()
+    const findTypeNameById = (id) => {
+        const idStr = id.toString()
+        for(const type of messageTypes)
+            if(type._id.toString() === idStr)
+                return type.name
+        return null
+    }
+
+    items = items.map(message => {
+        let typeName = findTypeNameById(message.type)
+        if(!typeName)
+            throw `Ошибка: не найден тип сообщения с id ${messageTypeIdStr}`
+
         return {
-            items,
-            totalPages,
-            currentPage: pageNumber,
+            id: message._id,
+            chat: message.chat,
+            sender: message.sender,
+            type: typeName,
+            date: message.date,
+            text: message.text,
+            content: message.content
         }
     })
-
-    return results
+    
+    return {
+        items,
+        totalPages: Math.ceil(count / pageSize),
+        pageNumber,
+    }
 }
 
 module.exports = {
     Message,
     MessageType,
     onStartup,
-    getMessages
+    getMessages,
+    createTextMessage
 }

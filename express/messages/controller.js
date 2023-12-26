@@ -1,14 +1,30 @@
-const { User, userGetting, userValidation, formUserInfoToSend } = require('../../models/User')
-const Role = require('../../models/Role')
+const { getMessages, createTextMessage } = require('../../models/Message')
 const { exceptionHandler } = require('../shared/exceptionHandler')
 
 class controller {
-    async getUsersByQuery(request, response) {
+    async getMessages(request, response) {
         try {
-            const { id, roles, username, name, about } = await request.body
-            const usernameParam = request.params.username
-            const query = request.query.query
-            return response.json(usersByQuery)
+            const { id, roles } = await request.user
+            const chatId = request.params.chatId
+            const messages = await getMessages(id, chatId)
+            return response.json(messages)
+        }
+        catch (e) {
+            exceptionHandler(e, request, response)
+        }
+    }
+
+    async createMessage(request, response) {
+        try {
+            const { id, roles } = request.user
+            const chatId = request.params.chatId
+            
+            const body = await request.body
+            if(!body || !body.text)
+                throw 'USERMESSAGE Неправильная сигнатура тела запроса'
+            
+            const message = await createTextMessage(id, chatId, body.text)
+            response.json(message)
         }
         catch (e) {
             exceptionHandler(e, request, response)

@@ -8,5 +8,7 @@ const router = Router()
 
 router.get('/', authMiddleware, controller.getUserChats)
 router.get('/test', controller.getPublicKey)
+router.get('/:id', authMiddleware, controller.getChatInfo)
+router.post('/user/:id', authMiddleware, controller.createTwoPersonsChat)
 
 module.exports = router
